@@ -37,7 +37,6 @@ class GamesController extends Controller
 
         $query = Game::with(['users', 'latestGameVersion'])->whereNull('deleted_at');
 
-        $games = $query->paginate($size, ['*'], 'page', $page + 1);
         switch ($sortBy) {
             case 'uploaddate':
                 $query->orderBy('created_at', $sortDir);
@@ -48,14 +47,13 @@ class GamesController extends Controller
                 break;
         }
 
+        $games = $query->paginate($size, ['*'], 'page', $page + 1);
         $games = $query->get();
 
-        $start = $page * $size;
-        $slicedGames = $games->slice($start, $size)->values();
 
         $count = $query->count();
 
-        $transformedGames = $slicedGames->map(function ($game) {
+        $transformedGames = $games->map(function ($game) {
             $latestVersion = $game->latestGameVersion;
 
             if ($latestVersion) {
@@ -79,9 +77,10 @@ class GamesController extends Controller
             if ($sortDir == 'asc') {
                 $transformedGames = $transformedGames->sortBy('scoreCount');
             }
-        }
 
-        $transformedGames = $transformedGames->slice($page * $size, $size)->values();
+            $start = $page * $size;
+            $slicedGames = $games->slice($start, $size)->values();
+        }
 
         return response()->json([
             'page' => $page,
