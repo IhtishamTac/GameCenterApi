@@ -38,7 +38,6 @@ class GamesController extends Controller
         $query = Game::with(['users', 'latestGameVersion'])->whereNull('deleted_at');
 
         $games = $query->paginate($size, ['*'], 'page', $page + 1);
-
         switch ($sortBy) {
             case 'uploaddate':
                 $query->orderBy('created_at', $sortDir);
@@ -49,10 +48,14 @@ class GamesController extends Controller
                 break;
         }
 
+        $games = $query->get();
+
+        $start = $page * $size;
+        $slicedGames = $games->slice($start, $size)->values();
+
         $count = $query->count();
 
-
-        $transformedGames = $games->getCollection()->transform(function ($game) {
+        $transformedGames = $slicedGames->map(function ($game) {
             $latestVersion = $game->latestGameVersion;
 
             if ($latestVersion) {
@@ -78,7 +81,7 @@ class GamesController extends Controller
             }
         }
 
-        $transformedGames->slice($page * $size, $size)->values();
+        $transformedGames = $transformedGames->slice($page * $size, $size)->values();
 
         return response()->json([
             'page' => $page,
@@ -138,7 +141,7 @@ class GamesController extends Controller
 
         $gameVersions = GameVersion::where(['game_id' => $games->id])->latest()->get();
         $games->thumbnail = 'games/' . $slug . '/' . $gameVersions->first()->version;
-        $games->uploadTimestamp = $gameVersions->first()->created_at;
+        $games->uploadTimestamp = Carbon::parse($gameVersions->first()->created_at)->format('Y-m-d H:i:s');
         $games->author = $games->users->username;
         $games->gamePath = $gameVersions->first()->storage_path;
         foreach ($gameVersions as $gvs) {
@@ -174,7 +177,7 @@ class GamesController extends Controller
         switch (true) {
             case $request->title && $request->description:
                 $game->update([
-                    'title' => $request->title ,
+                    'title' => $request->title,
                     'description' => $request->description
                 ]);
                 break;
@@ -312,7 +315,8 @@ class GamesController extends Controller
         ], 200);
     }
 
-    public function addScore(Request $request, $slug) {
+    public function addScore(Request $request, $slug)
+    {
         $game = Game::where('slug', $slug)->with('latestGameVersion')->whereNull('deleted_at')->first();
         if (!$game) {
             return response([
@@ -321,7 +325,7 @@ class GamesController extends Controller
             ], 403)->header('Content-Type', 'text/plain');
         }
 
-        if($request->score){
+        if ($request->score) {
             $addScore = new Score();
             $addScore->user_id = Auth::id();
             $addScore->game_version_id = $game->latestGameVersion->id;
@@ -334,4 +338,3 @@ class GamesController extends Controller
         }
     }
 }
-

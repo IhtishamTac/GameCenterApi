@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GamesController;
 use App\Http\Controllers\UserController;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,10 +33,14 @@ Route::prefix('v1')->group(function(){
     Route::middleware(['auth:sanctum', 'user.blocked'])->group(function(){
         Route::get('admins', [UserController::class, 'adminlist']);
         Route::post('users', [UserController::class, 'addUser']);
+
         Route::put('users/{id}', [UserController::class, 'updateUser']);
         Route::delete('users/{id}', [UserController::class, 'deleteUser']);
+        Route::post('users/{id}/block', [UserController::class, 'blockUser']);
+        Route::delete('users/{id}/unblock', [UserController::class, 'unblockUser']);
 
         Route::get('users', [UserController::class, 'userlist']);
+        Route::get('usersid', [UserController::class, 'userlistid']);
         Route::get('users/{username}', [UserController::class, 'userdetail']);
 
         Route::get('games', [GamesController::class, 'listgames']);

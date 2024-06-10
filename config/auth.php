@@ -17,12 +17,12 @@ return [
         'guard' => 'web',
         'passwords' => 'users',
     ],
-    
+
     'admin' => [
         'guard' => 'admin',
         'passwords' => 'admins',
     ],
-    
+
 
     /*
     |--------------------------------------------------------------------------
@@ -73,7 +73,6 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
-            // 'model' => App\Models\Administrator::class,
         ],
 
         'admins' => [

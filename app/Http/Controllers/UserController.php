@@ -135,20 +135,11 @@ class UserController extends Controller
                 'message' => 'You are not administrator',
             ], 403);
         }
-        $user = User::where(['id' => $id, 'deleted_at' => null])->first();
-        if ($user) {
-            $user->deleted_at = Carbon::now();
-            $user->delete_reason = $request->delete_reason ? $request->delete_reason : 'Violation';
-            $user->save();
-
+        $user = User::where('id', $id)->first();
+        if($user->delete()){
             return response([
 
             ], 204)->header('Content-Type', 'text/plain');
-        } else {
-            return response()->json([
-                'status' => 'not-found',
-                'message' => 'User not found'
-            ], 403);
         }
     }
 
@@ -163,7 +154,28 @@ class UserController extends Controller
                 'message' => 'You are not administrator',
             ], 403);
         }
-        $users->makeHidden(['deleted_at', 'delete_reason']);
+
+        $users->makeHidden(['delete_reason', 'delete_reason','id']);
+        return response()->json([
+            'totalElement' => count($users),
+            'content' => $users,
+        ], 200);
+    }
+
+
+    public function userlistid()
+    {
+        $users = User::all();
+        $admins = Administrator::all();
+        $adminId = $admins->pluck('id')->toArray();
+        if (!in_array(Auth::id(), $adminId)) {
+            return response()->json([
+                'status' => 'forbidden',
+                'message' => 'You are not administrator',
+            ], 403);
+        }
+
+        $users->makeHidden(['delete_reason']);
         return response()->json([
             'totalElement' => count($users),
             'content' => $users,
@@ -199,5 +211,49 @@ class UserController extends Controller
             $user,
             200
         );
+    }
+
+    public function blockUser(Request $request, $id) {
+        $admins = Administrator::all();
+        $adminId = $admins->pluck('id')->toArray();
+        if (!in_array(Auth::id(), $adminId)) {
+            return response()->json([
+                'status' => 'forbidden',
+                'message' => 'You are not administrator',
+            ], 403);
+        }
+        $user = User::where(['id' => $id, 'deleted_at' => null])->first();
+        if ($user) {
+            $user->deleted_at = Carbon::now();
+            $user->delete_reason = $request->delete_reason ? $request->delete_reason : 'Violation';
+            $user->save();
+
+            return response([
+
+            ], 204)->header('Content-Type', 'text/plain');
+        } else {
+            return response()->json([
+                'status' => 'not-found',
+                'message' => 'User not found'
+            ], 403);
+        }
+    }
+
+    public function unblockUser(Request $request, $id) {
+        $user = User::where('id', $id)->first();
+        if (!$user) {
+            return response()->json([
+                'status' => 'not-found',
+                'message' => 'User not foud'
+            ], 403);
+        }else{
+            $user->deleted_at = null;
+            $user->delete_reason = null;
+            $user->save();
+
+            return response([
+
+            ], 204)->header('Content-Type', 'text/plain');
+        }
     }
 }
