@@ -194,19 +194,20 @@ class UserController extends Controller
         $user->registeredTimestamp = $user->last_login_at;
         $user->authoredGames = $user->games;
 
-        $score = Score::where('user_id', $user->id)->with('game_version.game')->orderBy('score', 'asc')->get();
+        $score = Score::where('user_id', $user->id)->with('game_version.game')->orderBy('score', 'desc')->get();
 
         $user->makeHidden(['id', 'user_id', 'last_login_at', 'created_at', 'updated_at', 'deleted_at', 'delete_reason', 'games']);
         $score->makeHidden(['id', 'user_id', 'game_version_id', 'created_at', 'updated_at', 'game_version']);
 
-        $newScore = [];
-        foreach ($score as $key => $value) {
-            $newScore['game'] = $value->game_version->game;
-            $newScore['score'] = $value->score;
-            $newScore['timestamps'] = $value->created_at;
-        }
+        $newScores = $score->map(function ($value) {
+            return [
+                'game' => $value->game_version->game,
+                'score' => $value->score,
+                'timestamp' => $value->created_at,
+            ];
+        });
 
-        $user->highscore = $newScore;
+        $user->highscore = $newScores;
         return response()->json(
             $user,
             200
