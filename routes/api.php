@@ -53,7 +53,8 @@ Route::prefix('v1')->group(function(){
         Route::get('games/{slug}/scores', [GamesController::class, 'scoresList']);
         Route::post('games/{slug}/scores', [GamesController::class, 'addScore']);
         Route::post('games/{slug}/upload', [GamesController::class, 'uploadgame']);
-    });
+        });
+    Route::get('games/{slug}/{version}', [GamesController::class, 'getGameFiles']);
 });
 Route::fallback(function() {
     return response()->json([

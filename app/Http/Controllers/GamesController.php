@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Score;
 use App\Models\GameVersion;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class GamesController extends Controller
 {
@@ -301,6 +302,12 @@ class GamesController extends Controller
         }
 
         return response('File upload failed', 500)->header('Content-Type', 'text/plain');
+    }
+
+    public function getGameFiles($slug, $version)
+    {
+        $files = Storage::allFiles('/games' . '/' . $slug . '/' . $version);
+        return $files;
     }
 
     public function scoresList($slug)
