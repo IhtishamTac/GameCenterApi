@@ -33,7 +33,7 @@ class GamesController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'invalid',
-                'message' => 'Permintaan tidak valid',
+                'message' => 'Request body is not valid',
                 'violations' => $validator->errors()
             ], 400);
         }
