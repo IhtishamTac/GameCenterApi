@@ -125,7 +125,7 @@ class UserController extends Controller
         }
     }
 
-    public function deleteUser(Request $request, $id)
+    public function deleteUser($id)
     {
         $admins = Administrator::all();
         $adminId = $admins->pluck('id')->toArray();
@@ -135,8 +135,9 @@ class UserController extends Controller
                 'message' => 'You are not administrator',
             ], 403);
         }
-        $user = User::where('id', $id)->first();
-        if($user->delete()){
+        $user = User::where('id', $id)->whereNull('deleted_at')->first();
+        if($user->deleted_at = Carbon::now()){
+            $user->save();
             return response([
 
             ], 204)->header('Content-Type', 'text/plain');
@@ -145,7 +146,7 @@ class UserController extends Controller
 
     public function userlist()
     {
-        $users = User::all();
+        $users = User::whereNull('deleted_at')->get();
         $admins = Administrator::all();
         $adminId = $admins->pluck('id')->toArray();
         if (!in_array(Auth::id(), $adminId)) {
@@ -165,7 +166,7 @@ class UserController extends Controller
 
     public function userlistid()
     {
-        $users = User::all();
+        $users = User::whereNull('deleted_at')->get();
         $admins = Administrator::all();
         $adminId = $admins->pluck('id')->toArray();
         if (!in_array(Auth::id(), $adminId)) {
@@ -225,7 +226,6 @@ class UserController extends Controller
         }
         $user = User::where(['id' => $id, 'deleted_at' => null])->first();
         if ($user) {
-            $user->deleted_at = Carbon::now();
             $user->delete_reason = $request->delete_reason ? $request->delete_reason : 'Violation';
             $user->save();
 
@@ -248,7 +248,6 @@ class UserController extends Controller
                 'message' => 'User not foud'
             ], 403);
         }else{
-            $user->deleted_at = null;
             $user->delete_reason = null;
             $user->save();
 

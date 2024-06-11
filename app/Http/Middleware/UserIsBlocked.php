@@ -20,7 +20,7 @@ class UserIsBlocked
         $authorizationHeader = $request->header('Authorization');
         if ($authorizationHeader) {
             $user = Auth::user();
-            if($user->deleted_at){
+            if($user->delete_reason){
                 return response()->json([
                     'status' => 'blocked',
                     'message' => 'User blocked',
