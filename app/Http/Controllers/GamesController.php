@@ -285,15 +285,15 @@ class GamesController extends Controller
             }
 
             $file = $request->file('zipfile');
-            $path = $file->store('games/' . $game->id . '/' . $newVersionNumber, 'public');
+            $path = $file->store('games/' . $game->slug . '/' . $newVersionNumber, 'public');
             if ($request->hasFIle('thumbnail')) {
-                $request->thumbnail->store('games/' . $game->id . '/' . $newVersionNumber, 'public');
+                $request->thumbnail->store('games/' . $game->slug . '/' . $newVersionNumber, 'public');
             }
 
             $gameVersion = new GameVersion();
             $gameVersion->game_id = $game->id;
             $gameVersion->version = $newVersionNumber;
-            $gameVersion->storage_path = $path;
+            $gameVersion->storage_path = 'games/' . $game->slug . '/' . $newVersionNumber;
             $gameVersion->created_at = Carbon::now();
             $gameVersion->save();
 
