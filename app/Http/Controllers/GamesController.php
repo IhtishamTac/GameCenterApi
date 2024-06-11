@@ -15,11 +15,13 @@ class GamesController extends Controller
 {
     public function listgames(Request $request)
     {
+        // Ambil parameter dari request atau gunakan nilai default
         $page = $request->input('page', 0);
         $size = $request->input('size', 10);
         $sortBy = $request->input('sortBy', 'title');
         $sortDir = $request->input('sortDir', 'asc');
 
+        // Validasi parameter request
         $validator = Validator::make($request->all(), [
             'page' => 'integer|min:0',
             'size' => 'integer|min:1',
@@ -27,17 +29,24 @@ class GamesController extends Controller
             'sortDir' => 'in:asc,desc',
         ]);
 
+        // Jika validasi gagal, kembalikan respons error
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'invalid',
-                'message' => 'Request body is not valid',
+                'message' => 'Permintaan tidak valid',
                 'violations' => $validator->errors()
             ], 400);
         }
 
-        $query = Game::with(['users', 'latestGameVersion'])->whereNull('deleted_at')->has('latestGameVersion');
+        // Bangun query dasar untuk mengambil data game
+        $query = Game::with(['users', 'latestGameVersion'])
+            ->whereNull('deleted_at')
+            ->has('latestGameVersion'); // Pastikan hanya game dengan versi terbaru yang diambil
+
+        // Hitung total jumlah game
         $totalCount = $query->count();
-        
+
+        // Urutkan game berdasarkan parameter sortBy dan sortDir
         switch ($sortBy) {
             case 'uploaddate':
                 $query->orderBy('created_at', $sortDir);
@@ -48,38 +57,52 @@ class GamesController extends Controller
                 break;
         }
 
+        // Paginate game yang sudah diurutkan berdasarkan parameter page dan size
         $games = $query->paginate($size, ['*'], 'page', $page + 1);
+
+        // Ambil game-game yang sudah dipaginate
         $games = $query->get();
 
+        // Sesuaikan response game-game yang sudah diambil
         $transformedGames = $games->map(function ($game) {
             $latestVersion = $game->latestGameVersion;
 
+            // Jika game punya latestVersion, kita modify response
+            //- storage_path menjadi thumbnail
+            //- created_at menjadi uploadTimestamp
+            //- dan menghitung score dari game, dengan mencari berdasarkan latest version id
             if ($latestVersion) {
                 $game->thumbnail = $latestVersion->storage_path;
                 $game->uploadTimestamp = $latestVersion->created_at;
                 $game->scoreCount = Score::where('game_version_id', $latestVersion->id)->count();
             } else {
+                // jika kosong maka setting sebagai null
                 $game->thumbnail = null;
                 $game->uploadTimestamp = null;
                 $game->scoreCount = 0;
             }
 
-            $game->author = $game->users ? $game->users->username : 'Unknown';
+            // Menambahkan return author
+            $game->author = $game->users ? $game->users->username : 'Tidak Diketahui';
 
             return $game;
         });
 
+        // Sortir game-game berdasarkan popularitas jika sortBy adalah 'popular'
         if ($sortBy == 'popular') {
             $transformedGames = $transformedGames->sortByDesc('scoreCount');
 
+            // Jika sortDir adalah ascending, balikkan urutan sortir
             if ($sortDir == 'asc') {
                 $transformedGames = $transformedGames->sortBy('scoreCount');
             }
 
+            // Potong game-game yang sudah disortir berdasarkan parameter paginasi
             $start = $page * $size;
             $transformedGames = $games->slice($start, $size)->values();
         }
 
+        // Bangun respons JSON dengan metadata dan konten game
         return response()->json([
             'page' => $page,
             'size' => $size,
