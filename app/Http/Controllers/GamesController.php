@@ -285,8 +285,8 @@ class GamesController extends Controller
             }
 
             $file = $request->file('zipfile');
-            $path = $file->store('games/' . $game->slug . '/' . $newVersionNumber, 'public');
-            if ($request->hasFIle('thumbnail')) {
+            $file->store('games/' . $game->slug . '/' . $newVersionNumber, 'public');
+            if ($request->hasFile('thumbnail')) {
                 $request->thumbnail->store('games/' . $game->slug . '/' . $newVersionNumber, 'public');
             }
 
