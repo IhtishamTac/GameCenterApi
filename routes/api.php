@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GamesController;
 use App\Http\Controllers\UserController;
+use App\Models\Game;
 use App\Models\User;
 
 /*
@@ -22,15 +23,15 @@ use App\Models\User;
 //     return $request->user();
 // });
 
-Route::prefix('v1')->group(function(){
-    Route::prefix('auth')->group(function(){
+Route::prefix('v1')->group(function () {
+    Route::prefix('auth')->group(function () {
         Route::post('signup', [AuthController::class, 'signup']);
         Route::post('signin', [AuthController::class, 'signin']);
         Route::post('signout', [AuthController::class, 'signout'])->middleware('auth:sanctum');
     });
 
     //disini kita pakai middleware user blocked bersamaan dengan middleware dari auth sanctum
-    Route::middleware(['auth:sanctum', 'user.blocked'])->group(function(){
+    Route::middleware(['auth:sanctum', 'user.blocked'])->group(function () {
         Route::get('admins', [UserController::class, 'adminlist']);
         Route::post('users', [UserController::class, 'addUser']);
 
@@ -44,6 +45,7 @@ Route::prefix('v1')->group(function(){
         Route::get('users/{username}', [UserController::class, 'userdetail']);
 
         Route::get('games', [GamesController::class, 'listgames']);
+
         Route::post('games', [GamesController::class, 'postgame']);
         Route::get('games/{slug}', [GamesController::class, 'demogame']);
         Route::put('games/{slug}', [GamesController::class, 'updategame']);
@@ -53,10 +55,17 @@ Route::prefix('v1')->group(function(){
         Route::get('games/{slug}/scores', [GamesController::class, 'scoresList']);
         Route::post('games/{slug}/scores', [GamesController::class, 'addScore']);
         Route::post('games/{slug}/upload', [GamesController::class, 'uploadgame']);
+
+        Route::get('createdGames', function () {
+            $games = Game::where('created_by', auth()->id())->whereNull('deleted_at')->get();
+            return response()->json([
+                'games' => $games
+            ], 200);
         });
+    });
     Route::get('games/{slug}/{version}', [GamesController::class, 'getGameFiles']);
 });
-Route::fallback(function() {
+Route::fallback(function () {
     return response()->json([
         'status' => 'not-found',
         'message' => 'Not found'

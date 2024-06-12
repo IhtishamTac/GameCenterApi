@@ -201,8 +201,15 @@ class UserController extends Controller
         $score->makeHidden(['id', 'user_id', 'game_version_id', 'created_at', 'updated_at', 'game_version']);
 
         $newScores = $score->map(function ($value) {
+            if ($value->game_version && $value->game_version->game) {
+                return [
+                    'game' => $value->game_version->game,
+                    'score' => $value->score,
+                    'timestamp' => $value->created_at,
+                ];
+            }
             return [
-                'game' => $value->game_version->game,
+                'game' => null,
                 'score' => $value->score,
                 'timestamp' => $value->created_at,
             ];
