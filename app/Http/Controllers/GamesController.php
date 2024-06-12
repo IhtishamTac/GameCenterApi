@@ -73,6 +73,7 @@ class GamesController extends Controller
             //- created_at menjadi uploadTimestamp
             //- dan menghitung score dari game, dengan mencari berdasarkan latest version id
             if ($latestVersion) {
+                // Mengambil semia file dari storage path
                 $thumbnails = Storage::allFiles($latestVersion->storage_path);
 
                 // filter array menjadi hanya mengambil file berformat image (png, jpg, dll)
@@ -82,11 +83,12 @@ class GamesController extends Controller
                     return in_array(strtolower($extension), $imageExtensions);
                 });
 
-                // Convert the filtered array into a comma-separated string
+                // Ubah array yang telah difilter menjadi string yang dipisahkan oleh koma
                 $thumbnailString = implode(', ', $thumbnailPaths);
 
-                // Assign the thumbnail string to the game's thumbnail attribute
+                // assign atribut thumbnail
                 $game->thumbnail = $thumbnailString;
+
                 $game->uploadTimestamp = $latestVersion->created_at;
                 $game->scoreCount = Score::where('game_version_id', $latestVersion->id)->count();
             } else {
