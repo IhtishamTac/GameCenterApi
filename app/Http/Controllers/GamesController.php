@@ -73,7 +73,7 @@ class GamesController extends Controller
             //- created_at menjadi uploadTimestamp
             //- dan menghitung score dari game, dengan mencari berdasarkan latest version id
             if ($latestVersion) {
-                $game->thumbnail = $latestVersion->storage_path;
+                $game->thumbnail = Storage::allFiles($latestVersion->storage_path);
                 $game->uploadTimestamp = $latestVersion->created_at;
                 $game->scoreCount = Score::where('game_version_id', $latestVersion->id)->count();
             } else {
