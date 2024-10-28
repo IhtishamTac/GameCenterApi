@@ -176,12 +176,15 @@ class GamesController extends Controller
         $games->makeHidden(['id', 'created_by', 'created_at', 'updated_at', 'deleted_at', 'users']);
 
         $gameVersions = GameVersion::where(['game_id' => $games->id])->latest()->get();
-        $games->thumbnail = 'games/' . $slug . '/' . $gameVersions->first()->version;
-        $games->uploadTimestamp = Carbon::parse($gameVersions->first()->created_at)->format('Y-m-d H:i:s');
-        $games->author = $games->users->username;
-        $games->gamePath = $gameVersions->first()->storage_path;
-        foreach ($gameVersions as $gvs) {
-            $games->scoreCount = Score::where('game_version_id', $gvs->id)->count();
+        if ($gameVersions->isNotEmpty()) {
+            $games->thumbnail = 'games/' . $slug . '/' . $gameVersions->first()->version;
+            $games->uploadTimestamp = Carbon::parse($gameVersions->first()->created_at)->format('Y-m-d H:i:s');
+            $games->author = $games->users->username;
+            $games->gamePath = $gameVersions->first()->storage_path;
+
+            foreach ($gameVersions as $gvs) {
+                $games->scoreCount = Score::where('game_version_id', $gvs->id)->count();
+            }
         }
         return response()->json([
             $games
