@@ -176,7 +176,7 @@ class UserController extends Controller
             ], 403);
         }
 
-        $users->makeHidden(['delete_reason']);
+        // $users->makeHidden(['delete_reason']);
         return response()->json([
             'totalElement' => count($users),
             'content' => $users,
@@ -235,7 +235,6 @@ class UserController extends Controller
         if ($user) {
             $user->delete_reason = $request->delete_reason ? $request->delete_reason : 'Violation';
             $user->save();
-
             return response([
 
             ], 204)->header('Content-Type', 'text/plain');
